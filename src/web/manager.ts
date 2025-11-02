@@ -86,7 +86,11 @@ class WebManager {
       throw new Error(`Server with name ${name} not found`);
     }
 
-    const [command, ...args] = server.command.split(' ');
+    const isWindows = process.platform === 'win32';
+    const commandParts = server.command.split(' ');
+    const command = isWindows && commandParts[0] === 'npx' ? 'npx.cmd' : commandParts[0];
+    const args = commandParts.slice(1);
+
     const child = spawn(command, args, {
       stdio: 'pipe',
       detached: true,
