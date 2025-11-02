@@ -55,7 +55,7 @@ class WebManager {
     }
 
     config.mcpServers[name] = {
-      command: command.split(' '),
+      command: command,
       transport: 'stdio',
     };
 
@@ -86,7 +86,7 @@ class WebManager {
       throw new Error(`Server with name ${name} not found`);
     }
 
-    const [command, ...args] = server.command;
+    const [command, ...args] = server.command.split(' ');
     const child = spawn(command, args, {
       stdio: 'pipe',
       detached: true,
