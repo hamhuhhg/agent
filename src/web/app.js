@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fetchServers = async () => {
     try {
-      const response = await fetch('/api/servers');
+      const response = await fetch('/api/servers', {
+        cache: 'no-store',
+      });
       const servers = await response.json();
       renderServers(servers);
     } catch (error) {
