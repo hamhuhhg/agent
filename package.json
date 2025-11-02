@@ -56,7 +56,7 @@
   "scripts": {
     "dev": "./scripts/dev-start.sh",
     "start": "node --env-file=.env build/index.js",
-    "build": "./scripts/build.sh",
+    "build": "bash ./scripts/build.sh",
     "clean": "rm -rf build",
     "clean:sea": "rm -f 1mcp 1mcp.exe sea-prep.blob build/bundled.cjs",
     "prepare": "husky || true",
