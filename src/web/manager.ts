@@ -76,9 +76,20 @@ class WebManager {
   }
 
   async removeServer(name: string): Promise<void> {
+    // Attempt to stop the server if it's running, but ignore errors
+    // as it might not be running or in a valid state.
+    try {
+      await this.toggleServer(name, false);
+    } catch (error) {
+      console.warn(`Could not disable server ${name} during deletion. It might already be in an invalid state.`, error);
+    }
+
     const config = await this.readConfigFile();
     if (!config.mcpServers[name]) {
-      throw new Error(`Server with name ${name} not found`);
+      // If the server is not in the config, there's nothing to do.
+      // This can happen if the server was already removed but the UI was out of sync.
+      console.warn(`Server ${name} not found in config file during deletion.`);
+      return;
     }
 
     delete config.mcpServers[name];
