@@ -14,6 +14,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import { Options as RateLimitOptions } from 'express-rate-limit';
+import { static as expressStatic } from 'express';
 
 import errorHandler from './middlewares/errorHandler.js';
 import { httpRequestLogger } from './middlewares/httpRequestLogger.js';
@@ -25,6 +26,13 @@ import createOAuthRoutes from './routes/oauthRoutes.js';
 import { setupSseRoutes } from './routes/sseRoutes.js';
 import { setupStreamableHttpRoutes } from './routes/streamableHttpRoutes.js';
 import { StreamableSessionRepository } from './storage/streamableSessionRepository.js';
+import webApi from '@src/web/api.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Helper to get __dirname in ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * ExpressServer orchestrates the HTTP/SSE transport layer for the MCP server.
@@ -127,6 +135,20 @@ export class ExpressServer {
    * Logs the authentication status for debugging purposes.
    */
   private setupRoutes(): void {
+    // Serve the index.html for the root path
+    const webDir = path.join(__dirname, '..', '..', 'web');
+    this.app.get('/', async (req, res) => {
+      console.log('Serving index.html');
+      try {
+        const indexPath = path.join(webDir, 'index.html');
+        const data = await fs.promises.readFile(indexPath, 'utf-8');
+        res.send(data);
+      } catch (error) {
+        console.error('Error serving index.html:', error);
+        res.status(500).send('Error serving index.html');
+      }
+    });
+
     // Setup OAuth routes using SDK's mcpAuthRouter
     const issuerUrl = new URL(this.configManager.getUrl());
 
@@ -206,6 +228,12 @@ export class ExpressServer {
     } else {
       logger.info('Authentication disabled - all endpoints accessible without auth');
     }
+
+    // Serve static files for the web interface
+    this.app.use(expressStatic(webDir));
+
+    // Setup web API routes
+    this.app.use('/api', webApi);
   }
 
   /**

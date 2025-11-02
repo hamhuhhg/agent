@@ -22,11 +22,13 @@ vi.mock('express', () => {
 
   const mockExpress = Object.assign(vi.fn(mockApp), {
     Router: vi.fn(mockRouter),
+    static: vi.fn(() => 'static-middleware'),
   });
 
   return {
     default: mockExpress,
     Router: mockRouter,
+    static: vi.fn(() => 'static-middleware'),
   };
 });
 
