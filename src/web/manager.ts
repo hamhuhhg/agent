@@ -1,9 +1,13 @@
 import { McpConfigManager } from '@src/config/mcpConfigManager.js';
 import { ServerManager } from '@src/core/server/serverManager.js';
-import { OutboundConnection } from '@src/core/types/index.js';
+import { OutboundConnection, ClientStatus } from '@src/core/types/index.js';
 import fs from 'fs/promises';
 import { getGlobalConfigPath } from '@src/constants.js';
 import { spawn, ChildProcess } from 'child_process';
+
+export interface ManagedOutboundConnection extends Omit<OutboundConnection, 'status'> {
+  status: 'running' | 'stopped' | ClientStatus;
+}
 
 class WebManager {
   private mcpConfigManager: McpConfigManager;
@@ -23,12 +27,15 @@ class WebManager {
     return this._serverManager;
   }
 
-  getServers(): (OutboundConnection & { status: string })[] {
+  getServers(): ManagedOutboundConnection[] {
     const clients = Array.from(this.serverManager.getClients().values());
-    return clients.map(client => ({
-      ...client,
-      status: this.runningServers.has(client.name) ? 'running' : 'stopped',
-    }));
+    return clients.map(client => {
+      const isRunning = this.runningServers.has(client.name);
+      return {
+        ...client,
+        status: isRunning ? 'running' : 'stopped',
+      };
+    });
   }
 
   private async readConfigFile(): Promise<any> {

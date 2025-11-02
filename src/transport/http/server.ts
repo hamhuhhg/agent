@@ -15,6 +15,7 @@ import cors from 'cors';
 import express from 'express';
 import { Options as RateLimitOptions } from 'express-rate-limit';
 import { static as expressStatic } from 'express';
+import fs from 'fs';
 
 import errorHandler from './middlewares/errorHandler.js';
 import { httpRequestLogger } from './middlewares/httpRequestLogger.js';

@@ -15,6 +15,10 @@ pnpm exec tsc --project tsconfig.build.json
 echo "🔗 Resolving path aliases..."
 pnpm exec tsc-alias -p tsconfig.build.json
 
+# Copy web interface files
+echo "📂 Copying web interface files..."
+cp -r src/web build/web
+
 # Make the built file executable
 echo "🔧 Making build/index.js executable..."
 node -e "require('fs').chmodSync('build/index.js', '755')"

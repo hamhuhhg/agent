@@ -1,21 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Server Management</title>
+  <title>إدارة خوادم MCP</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>MCP Server Management</h1>
-    <div id="server-list"></div>
-    <div class="add-server-form">
-      <h2>Add New Server</h2>
-      <input type="text" id="server-name" placeholder="Server Name">
-      <input type="text" id="server-command" placeholder="Server Command">
-      <button id="add-server-btn">Add Server</button>
-    </div>
+    <header>
+      <h1>إدارة خوادم MCP</h1>
+    </header>
+    <main>
+      <div id="server-list"></div>
+      <div class="add-server-form">
+        <h2>إضافة خادم جديد</h2>
+        <input type="text" id="server-name" placeholder="اسم الخادم">
+        <input type="text" id="server-command" placeholder="أمر تشغيل الخادم">
+        <button id="add-server-btn">إضافة خادم</button>
+      </div>
+    </main>
   </div>
   <script src="app.js"></script>
 </body>
