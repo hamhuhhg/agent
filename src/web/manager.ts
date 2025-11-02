@@ -3,17 +3,15 @@ import { ServerManager } from '@src/core/server/serverManager.js';
 import { OutboundConnection, ClientStatus } from '@src/core/types/index.js';
 import fs from 'fs/promises';
 import { getGlobalConfigPath } from '@src/constants.js';
-import { spawn, ChildProcess } from 'child_process';
 
 export interface ManagedOutboundConnection extends Omit<OutboundConnection, 'status'> {
-  status: 'running' | 'stopped' | ClientStatus;
+  status: ClientStatus | 'disabled';
 }
 
 class WebManager {
   private mcpConfigManager: McpConfigManager;
   private _serverManager: ServerManager | null = null;
   private configFilePath: string;
-  private runningServers: Map<string, ChildProcess> = new Map();
 
   constructor() {
     this.mcpConfigManager = McpConfigManager.getInstance();
@@ -27,14 +25,29 @@ class WebManager {
     return this._serverManager;
   }
 
-  getServers(): ManagedOutboundConnection[] {
+  async getServers(): Promise<ManagedOutboundConnection[]> {
     const clients = Array.from(this.serverManager.getClients().values());
-    return clients.map(client => {
-      const isRunning = this.runningServers.has(client.name);
+    const config = await this.readConfigFile();
+
+    return Object.keys(config.mcpServers).map(name => {
+      const client = clients.find(c => c.name === name);
+      const serverConfig = config.mcpServers[name];
+
+      if (serverConfig.disabled) {
+        return {
+          name,
+          status: 'disabled',
+        } as ManagedOutboundConnection;
+      }
+
+      if (client) {
+        return client as ManagedOutboundConnection;
+      }
+
       return {
-        ...client,
-        status: isRunning ? 'running' : 'stopped',
-      };
+        name,
+        status: ClientStatus.Disconnected,
+      } as ManagedOutboundConnection;
     });
   }
 
@@ -55,7 +68,7 @@ class WebManager {
     }
 
     config.mcpServers[name] = {
-      command: command,
+      command,
       transport: 'stdio',
     };
 
@@ -63,9 +76,6 @@ class WebManager {
   }
 
   async removeServer(name: string): Promise<void> {
-    if (this.runningServers.has(name)) {
-      await this.stopServer(name);
-    }
     const config = await this.readConfigFile();
     if (!config.mcpServers[name]) {
       throw new Error(`Server with name ${name} not found`);
@@ -75,39 +85,14 @@ class WebManager {
     await this.writeConfigFile(config);
   }
 
-  async startServer(name: string): Promise<void> {
-    if (this.runningServers.has(name)) {
-      return;
-    }
-
+  async toggleServer(name: string, enable: boolean): Promise<void> {
     const config = await this.readConfigFile();
-    const server = config.mcpServers[name];
-    if (!server) {
+    if (!config.mcpServers[name]) {
       throw new Error(`Server with name ${name} not found`);
     }
 
-    const isWindows = process.platform === 'win32';
-    const commandParts = server.command.split(' ');
-    const command = isWindows && commandParts[0] === 'npx' ? 'npx.cmd' : commandParts[0];
-    const args = commandParts.slice(1);
-
-    const child = spawn(command, args, {
-      stdio: 'pipe',
-      detached: true,
-    });
-    this.runningServers.set(name, child);
-
-    child.on('close', () => {
-      this.runningServers.delete(name);
-    });
-  }
-
-  async stopServer(name: string): Promise<void> {
-    const child = this.runningServers.get(name);
-    if (child) {
-      child.kill();
-      this.runningServers.delete(name);
-    }
+    config.mcpServers[name].disabled = !enable;
+    await this.writeConfigFile(config);
   }
 }
 

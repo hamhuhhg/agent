@@ -67,12 +67,17 @@ h1 {
   color: var(--white-color);
 }
 
-.status.running {
+.status.connected {
   background-color: var(--success-color);
 }
 
-.status.stopped {
+.status.disconnected,
+.status.disabled {
   background-color: var(--gray-color);
+}
+
+.status.error {
+  background-color: var(--danger-color);
 }
 
 .add-server-form {
@@ -112,6 +117,22 @@ button {
 
 #add-server-btn:hover {
   background-color: var(--primary-hover-color);
+}
+
+.toggle-btn[data-enabled="true"] {
+  background-color: var(--success-color);
+}
+
+.toggle-btn[data-enabled="true"]:hover {
+  background-color: var(--success-hover-color);
+}
+
+.toggle-btn[data-enabled="false"] {
+  background-color: var(--gray-color);
+}
+
+.toggle-btn[data-enabled="false"]:hover {
+  background-color: var(--dark-gray-color);
 }
 
 .server-actions button {

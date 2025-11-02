@@ -3,9 +3,9 @@ import WebManager from './manager.js';
 
 const router = express.Router();
 
-router.get('/servers', (req, res) => {
+router.get('/servers', async (req, res) => {
   try {
-    const servers = WebManager.getServers();
+    const servers = await WebManager.getServers();
     res.json(servers);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -35,20 +35,14 @@ router.delete('/servers/:name', async (req, res) => {
   }
 });
 
-router.post('/servers/:name/start', async (req, res) => {
+router.post('/servers/:name/toggle', async (req, res) => {
   try {
     const { name } = req.params;
-    await WebManager.startServer(name);
-    res.status(200).send();
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
-
-router.post('/servers/:name/stop', async (req, res) => {
-  try {
-    const { name } = req.params;
-    await WebManager.stopServer(name);
+    const { enable } = req.body;
+    if (typeof enable !== 'boolean') {
+      return res.status(400).json({ error: 'Enable must be a boolean' });
+    }
+    await WebManager.toggleServer(name, enable);
     res.status(200).send();
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

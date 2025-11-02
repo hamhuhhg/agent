@@ -19,15 +19,38 @@ document.addEventListener('DOMContentLoaded', () => {
     servers.forEach(server => {
       const serverItem = document.createElement('div');
       serverItem.className = 'server-item';
-      const statusClass = server.status === 'running' ? 'running' : 'stopped';
+
+      let statusText = server.status;
+      let statusClass = server.status;
+
+      switch (server.status) {
+        case 'connected':
+          statusText = 'متصل';
+          statusClass = 'connected';
+          break;
+        case 'disconnected':
+          statusText = 'غير متصل';
+          statusClass = 'disconnected';
+          break;
+        case 'error':
+          statusText = 'خطأ';
+          statusClass = 'error';
+          break;
+        case 'disabled':
+          statusText = 'معطل';
+          statusClass = 'disabled';
+          break;
+      }
+
+      const isEnabled = server.status !== 'disabled';
+
       serverItem.innerHTML = `
         <div>
           <strong>${server.name}</strong>
-          <span class="status ${statusClass}">${server.status}</span>
+          <span class="status ${statusClass}">${statusText}</span>
         </div>
         <div class="server-actions">
-          <button class="start-btn" data-name="${server.name}">بدء</button>
-          <button class="stop-btn" data-name="${server.name}">إيقاف</button>
+          <button class="toggle-btn" data-name="${server.name}" data-enabled="${!isEnabled}">${isEnabled ? 'تعطيل' : 'تفعيل'}</button>
           <button class="delete-btn" data-name="${server.name}">حذف</button>
         </div>
       `;
@@ -76,25 +99,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (target.classList.contains('start-btn')) {
+    if (target.classList.contains('toggle-btn')) {
+      const enable = target.dataset.enabled === 'true';
       try {
-        await fetch(`/api/servers/${name}/start`, {
+        await fetch(`/api/servers/${name}/toggle`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ enable }),
         });
         fetchServers();
       } catch (error) {
-        console.error('Error starting server:', error);
-      }
-    }
-
-    if (target.classList.contains('stop-btn')) {
-      try {
-        await fetch(`/api/servers/${name}/stop`, {
-          method: 'POST',
-        });
-        fetchServers();
-      } catch (error) {
-        console.error('Error stopping server:', error);
+        console.error('Error toggling server:', error);
       }
     }
   });
