@@ -165,9 +165,14 @@ function createStdioTransport(
   }));
 
   // Create SDK-compatible parameters with processed environment
+  const isWindows = process.platform === 'win32';
+  const commandParts = validatedTransport.command.split(' ');
+  const command = isWindows && commandParts[0] === 'npx' ? 'npx.cmd' : commandParts[0];
+  const args = [...(commandParts.slice(1) || []), ...(validatedTransport.args || [])];
+
   const stdioParams: StdioServerParameters = {
-    command: validatedTransport.command,
-    args: validatedTransport.args,
+    command: command,
+    args: args,
     stderr: validatedTransport.stderr as 'inherit' | 'pipe' | 'ignore', // IOType validation is complex, trust Zod validation
     cwd: validatedTransport.cwd,
     env: envResult.processedEnv,
